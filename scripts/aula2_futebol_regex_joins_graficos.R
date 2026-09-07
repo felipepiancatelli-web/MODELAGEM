@@ -225,9 +225,8 @@ artilheiros_copa <- gols_com_torneio %>%
 
 artilheiros_copa
 
-#* Atencao: o registro de artilheiros em partidas muito antigas pode ser
-#* incompleto na fonte original - todo dataset tem limitacoes, e dizer
-#* isso em voz alta faz parte do trabalho de quem faz analise de dados.
+#* Atencao: o registro de artilheiros de partidas muito antigas pode
+#* estar incompleto na fonte original.
 
 
 # ==================================================================
