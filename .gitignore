@@ -1,0 +1,9 @@
+# Arquivos gerados pelo R / RStudio
+.Rhistory
+.RData
+.Rproj.user/
+*.Rproj
+
+# Sistema
+.DS_Store
+Thumbs.db
