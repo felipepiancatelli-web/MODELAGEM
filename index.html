@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oscar Winning Films - AJAX e JavaScript</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 900px; margin: 30px auto; padding: 0 16px; }
+    nav a { margin-right: 12px; font-weight: bold; text-decoration: none; color: #1a5fb4; }
+    nav a.ativo { color: #c01c28; text-decoration: underline; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #f0f0f0; }
+    #status { margin-top: 16px; color: #555; }
+  </style>
+</head>
+<body>
+  <h1>Oscar Winning Films</h1>
+  <p>Fonte: <a href="https://www.scrapethissite.com/pages/ajax-javascript/" target="_blank">scrapethissite.com</a></p>
+
+  <h3>Escolha um ano</h3>
+  <nav id="anos">
+    <a href="#2015" data-ano="2015">2015</a>
+    <a href="#2014" data-ano="2014">2014</a>
+    <a href="#2013" data-ano="2013">2013</a>
+    <a href="#2012" data-ano="2012">2012</a>
+    <a href="#2011" data-ano="2011">2011</a>
+    <a href="#2010" data-ano="2010">2010</a>
+  </nav>
+
+  <div id="status"></div>
+
+  <table id="tabela" hidden>
+    <thead>
+      <tr><th>Título</th><th>Indicações</th><th>Prêmios</th><th>Melhor Filme</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const URL_BASE = "https://www.scrapethissite.com/pages/ajax-javascript/?ajax=true&year=";
+
+    // Cópia local dos dados, usada só se o navegador bloquear a requisição (CORS).
+    // Formato: [título, indicações, prêmios, melhor filme (1/0)]
+    const DADOS_LOCAIS = {
+      2015: [["Spotlight",6,2,1],["Mad Max: Fury Road",10,6,0],["The Revenant",12,3,0],["Bridge of Spies",6,1,0],["The Big Short",5,1,0],["The Danish Girl",4,1,0],["Room",4,1,0],["Ex Machina",2,1,0],["The Hateful Eight",2,1,0],["Inside Out",2,1,0],["Amy",1,1,0],["Bear Story",1,1,0],["A Girl in the River: The Price of Forgiveness",1,1,0],["Son of Saul",1,1,0],["Spectre",1,1,0],["Stutterer",1,1,0]],
+      2014: [["Birdman",9,4,1],["The Grand Budapest Hotel",9,4,0],["Whiplash",5,3,0],["The Imitation Game",8,1,0],["American Sniper",6,1,0],["Boyhood",6,1,0],["Interstellar",5,1,0],["The Theory of Everything",5,1,0],["Ida",2,1,0],["Selma",2,1,0],["Citizenfour",1,1,0],["Big Hero 6",1,1,0],["Crisis Hotline: Veterans Press 1",1,1,0],["The Phone Call",1,1,0],["Still Alice",1,1,0],["Feast",1,1,0]],
+      2013: [["12 Years a Slave",9,3,1],["Gravity",10,7,0],["Dallas Buyers Club",6,3,0],["Frozen",2,2,0],["The Great Gatsby",2,2,0],["Her",5,1,0],["Blue Jasmine",3,1,0],["Mr Hublot",1,1,0],["The Lady in Number 6: Music Saved My Life",1,1,0],["Helium",1,1,0],["The Great Beauty",1,1,0],["20 Feet from Stardom",1,1,0]],
+      2012: [["Argo",7,3,1],["Life of Pi",11,4,0],["Les Misérables",8,3,0],["Lincoln",12,2,0],["Django Unchained",5,2,0],["Skyfall",5,2,0],["Silver Linings Playbook",8,1,0],["Zero Dark Thirty",5,1,0],["Amour",5,1,0],["Anna Karenina",4,1,0],["Paperman",1,1,0],["Brave",1,1,0],["Searching for Sugar Man",1,1,0],["Inocente",1,1,0],["Curfew",1,1,0]],
+      2011: [["The Artist",10,5,1],["Hugo",11,5,0],["The Iron Lady",2,2,0],["The Descendants",5,1,0],["The Girl with the Dragon Tattoo",5,1,0],["Midnight in Paris",4,1,0],["The Help",4,1,0],["A Separation",2,1,0],["The Fantastic Flying Books of Mr. Morris Lessmore",1,1,0],["The Shore",1,1,0],["Undefeated",1,1,0],["The Muppets",1,1,0],["Saving Face",1,1,0],["Beginners",1,1,0],["Rango",1,1,0]],
+      2010: [["The King's Speech",12,4,1],["Inception",8,4,0],["The Social Network",8,3,0],["The Fighter",7,2,0],["Toy Story 3",5,2,0],["Alice in Wonderland",3,2,0],["Black Swan",5,1,0],["In a Better World",1,1,0],["The Lost Thing",1,1,0],["God of Love",1,1,0],["The Wolfman",1,1,0],["Strangers No More",1,1,0],["Inside Job",1,1,0]]
+    };
+
+    const status = document.getElementById("status");
+    const tabela = document.getElementById("tabela");
+    const corpo = tabela.querySelector("tbody");
+
+    function mostrarTabela(linhas, mensagem) {
+      corpo.innerHTML = "";
+      linhas.forEach(function (linha) {
+        const tr = document.createElement("tr");
+        linha.forEach(function (valor) {
+          const td = document.createElement("td");
+          td.textContent = valor;
+          tr.appendChild(td);
+        });
+        corpo.appendChild(tr);
+      });
+      status.textContent = mensagem;
+      tabela.hidden = false;
+    }
+
+    function carregarAno(ano) {
+      status.textContent = "Carregando...";
+      tabela.hidden = true;
+
+      fetch(URL_BASE + ano)
+        .then(function (resp) {
+          if (!resp.ok) throw new Error("HTTP " + resp.status);
+          return resp.json();
+        })
+        .then(function (filmes) {
+          const linhas = filmes.map(function (f) {
+            return [f.title.trim(), f.nominations, f.awards, f.best_picture ? "★" : ""];
+          });
+          mostrarTabela(linhas, linhas.length + " filmes em " + ano + " (dados do site via Ajax)");
+        })
+        .catch(function () {
+          // O site de origem não libera CORS para outros domínios: usa a cópia local.
+          const linhas = DADOS_LOCAIS[ano].map(function (f) {
+            return [f[0], f[1], f[2], f[3] ? "★" : ""];
+          });
+          mostrarTabela(linhas, linhas.length + " filmes em " + ano + " (cópia local: o navegador bloqueou a requisição ao site)");
+        });
+    }
+
+    document.querySelectorAll("#anos a").forEach(function (link) {
+      link.addEventListener("click", function (e) {
+        e.preventDefault();
+        document.querySelectorAll("#anos a").forEach(function (a) { a.classList.remove("ativo"); });
+        link.classList.add("ativo");
+        carregarAno(link.dataset.ano);
+      });
+    });
+  </script>
+</body>
+</html>
